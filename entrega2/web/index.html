@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oráculo · Chatbot de Mitología Griega</title>
+<style>
+  :root { --fondo:#f6f2ea; --tinta:#1f2a37; --suave:#6b7280; --borde:#e4dccd;
+          --prolog:#1d4e89; --llm:#8a3b12; --usuario:#1f2a37; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Georgia, "Times New Roman", serif; background:var(--fondo); color:var(--tinta);
+         display:flex; flex-direction:column; height:100vh; }
+  header { padding:14px 20px; border-bottom:1px solid var(--borde); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  h1 { font-size:20px; margin:0; letter-spacing:.5px; }
+  h1 small { font-family: system-ui, sans-serif; font-size:12px; color:var(--suave); font-weight:normal; margin-left:6px; }
+  .motores { margin-left:auto; display:flex; border:1px solid var(--borde); border-radius:8px; overflow:hidden;
+             font-family: system-ui, sans-serif; font-size:14px; }
+  .motores button { border:0; background:white; padding:8px 14px; cursor:pointer; color:var(--tinta); }
+  .motores button.activo { background:var(--tinta); color:white; }
+  main { flex:1; overflow-y:auto; padding:20px; }
+  .chat { max-width:900px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+  .pregunta { align-self:flex-end; background:var(--usuario); color:white; padding:10px 14px; border-radius:14px 14px 2px 14px;
+              max-width:75%; font-family: system-ui, sans-serif; }
+  .respuestas { display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .resp { background:white; border:1px solid var(--borde); border-left:4px solid var(--prolog); border-radius:4px 12px 12px 12px;
+          padding:10px 14px; line-height:1.45; }
+  .resp.llm { border-left-color:var(--llm); }
+  .resp.error { background:#fff5f5; }
+  .etiqueta { font-family: system-ui, sans-serif; font-size:11px; text-transform:uppercase; letter-spacing:.6px;
+              color:var(--prolog); margin-bottom:4px; display:flex; justify-content:space-between; }
+  .resp.llm .etiqueta { color:var(--llm); }
+  .etiqueta span:last-child { color:var(--suave); text-transform:none; letter-spacing:0; }
+  .bienvenida { text-align:center; color:var(--suave); margin-top:8vh; }
+  .bienvenida p { font-style:italic; }
+  .ejemplos { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:14px; }
+  .ejemplos button { font-family: system-ui, sans-serif; font-size:13px; border:1px solid var(--borde); background:white;
+                     border-radius:999px; padding:6px 12px; cursor:pointer; color:var(--tinta); }
+  .ejemplos button:hover { border-color:var(--tinta); }
+  form { display:flex; gap:8px; padding:14px 20px; border-top:1px solid var(--borde); max-width:940px; width:100%; margin:0 auto; }
+  input { flex:1; padding:12px 14px; border:1px solid var(--borde); border-radius:10px; font-size:16px; font-family: system-ui, sans-serif; }
+  input:focus { outline:2px solid var(--tinta); outline-offset:-1px; }
+  form button { padding:0 20px; border:0; border-radius:10px; background:var(--tinta); color:white; font-size:15px; cursor:pointer; }
+  form button:disabled { opacity:.5; cursor:wait; }
+  .pensando { color:var(--suave); font-style:italic; font-family: system-ui, sans-serif; font-size:14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Oráculo <small>Chatbot de mitología griega · <span id="modelo">…</span></small></h1>
+  <div class="motores" role="group" aria-label="Motor del chatbot">
+    <button data-motor="prolog" class="activo">Prolog</button>
+    <button data-motor="llm">LLM</button>
+    <button data-motor="ambos">Comparar ambos</button>
+  </div>
+</header>
+<main id="main">
+  <div class="chat" id="chat">
+    <div class="bienvenida" id="bienvenida">
+      <p>Pregunta por dioses, titanes, héroes y criaturas. Elige el motor arriba.</p>
+      <div class="ejemplos">
+        <button>¿Quiénes son los abuelos de Apolo?</button>
+        <button>¿Quién es el dios del mar?</button>
+        <button>¿Es Zeus hijo de Cronos?</button>
+        <button>¿Quién mató a Medusa?</button>
+        <button>¿Quiénes son los hijos de Zeus y Hera?</button>
+        <button>¿Cómo se llama Atenea en Roma?</button>
+      </div>
+    </div>
+  </div>
+</main>
+<form id="form">
+  <input id="entrada" placeholder="Escribe tu pregunta…" autocomplete="off" maxlength="300" autofocus>
+  <button id="enviar">Preguntar</button>
+</form>
+<script>
+  const NOMBRES = { prolog: "Prolog · lógica de primer orden", llm: "LLM" };
+  let motor = "prolog";
+  const chat = document.getElementById("chat"), main = document.getElementById("main");
+  const entrada = document.getElementById("entrada"), enviar = document.getElementById("enviar");
+
+  document.querySelectorAll(".motores button").forEach(b => b.onclick = () => {
+    document.querySelectorAll(".motores button").forEach(x => x.classList.remove("activo"));
+    b.classList.add("activo"); motor = b.dataset.motor; entrada.focus();
+  });
+  document.querySelectorAll(".ejemplos button").forEach(b => b.onclick = () => preguntar(b.textContent));
+  document.getElementById("form").onsubmit = e => { e.preventDefault(); preguntar(entrada.value); };
+
+  fetch("/api/estado").then(r => r.json()).then(d => {
+    document.getElementById("modelo").textContent = "LLM: " + d.llm;
+    NOMBRES.llm = "LLM · " + d.llm;
+  }).catch(() => {});
+
+  function nodo(tag, clase, texto) {
+    const n = document.createElement(tag); if (clase) n.className = clase;
+    if (texto !== undefined) n.textContent = texto; return n;
+  }
+
+  async function preguntar(texto) {
+    texto = texto.trim(); if (!texto) return;
+    document.getElementById("bienvenida")?.remove();
+    chat.appendChild(nodo("div", "pregunta", texto));
+    const espera = chat.appendChild(nodo("div", "pensando", "Consultando al oráculo…"));
+    entrada.value = ""; enviar.disabled = true; main.scrollTop = main.scrollHeight;
+    try {
+      const r = await fetch("/api/preguntar", { method: "POST", headers: { "Content-Type": "application/json" },
+                                               body: JSON.stringify({ pregunta: texto, motor }) });
+      const d = await r.json();
+      const cont = nodo("div", "respuestas");
+      if (!r.ok) cont.appendChild(burbuja("prolog", d.error || "Error desconocido", false, null));
+      else d.resultados.forEach(x => cont.appendChild(burbuja(x.motor, x.respuesta, x.ok, x.segundos)));
+      espera.replaceWith(cont);
+    } catch (e) {
+      espera.replaceWith(burbuja("prolog", "No se pudo contactar al servidor.", false, null));
+    }
+    enviar.disabled = false; entrada.focus(); main.scrollTop = main.scrollHeight;
+  }
+
+  function burbuja(m, texto, ok, seg) {
+    const b = nodo("div", "resp " + m + (ok ? "" : " error"));
+    const et = nodo("div", "etiqueta");
+    et.appendChild(nodo("span", "", NOMBRES[m] || m));
+    et.appendChild(nodo("span", "", seg === null ? "" : seg + " s"));
+    b.appendChild(et); b.appendChild(nodo("div", "", texto));
+    return b;
+  }
+</script>
+</body>
+</html>
