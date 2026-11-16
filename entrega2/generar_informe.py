@@ -23,7 +23,7 @@ RAIZ = Path(__file__).parent
 RESULTADOS = RAIZ / "informe" / "resultados.json"
 SALIDA = RAIZ / "informe" / "Informe_Final_Chatbot_Mitologia.docx"
 
-INTEGRANTES = ["Israel Arriagada", "[Integrante 2]", "[Integrante 3]"]
+INTEGRANTES = ["Israel Arriagada"]
 REPO = "https://github.com/IsraelArriagada/Fundamentos_de_IA"
 FECHA_ENTREGA = "Domingo 15 de noviembre de 2026"
 
@@ -113,6 +113,12 @@ def marca(r: dict | None) -> str:
     if r.get("error"):
         return "⚠"
     return "✓" if r["correcta"] else "✗"
+
+
+def truncada(r: dict | None) -> bool:
+    """Respuesta cortada por el limite de tokens: no termina en signo de cierre."""
+    t = (r or {}).get("respuesta", "").rstrip()
+    return bool(t) and not t.endswith((".", "!", "?", ")", "»", '"', "”"))
 
 
 def lista_fallos(filas, motor) -> list[dict]:
@@ -297,7 +303,8 @@ def construir(datos: dict) -> Document:
     for f in filas:
         rp = f.get("prolog")
         rl = f.get("llm")
-        txt_l = (rl["respuesta"] or f"Error: {rl['error']}") if rl else "(pendiente)"
+        txt_l = (rl["respuesta"] or ("No evaluada: cuota de la API agotada (HTTP 429)." if "429" in rl["error"]
+                                      else f"No evaluada: {' '.join(rl['error'].split())[:80]}…")) if rl else "(pendiente)"
         filas_t.append([str(f["n"]), f["pregunta"], f["tipo"], rp["respuesta"], marca(rp), txt_l, marca(rl)])
     tabla(doc, ["#", "Pregunta", "Tipo", "Respuesta Prolog", "", "Respuesta LLM", ""], filas_t,
           [0.7, 3.2, 2.2, 4.6, 0.7, 4.6, 0.7], fuente=8)
@@ -334,7 +341,8 @@ def construir(datos: dict) -> Document:
     if hay_llm:
         rl = res["llm"]
         fallos_l = lista_fallos(filas, "llm")
-        errores = f" y {rl['errores']} errores de conexión" if rl["errores"] else ""
+        errores = (f" ({rl['errores']} pregunta{'s' if rl['errores'] > 1 else ''} no se pudo evaluar por "
+                   "un error de la API)") if rl["errores"] else ""
         texto = (f"El chatbot LLM ({datos.get('modelo_llm')}) respondió correctamente {rl['correctas']} de "
                  f"{rl['evaluadas']} preguntas, con un tiempo promedio de {rl['tiempo_promedio']} s{errores}. ")
         if fallos_l:
@@ -347,23 +355,49 @@ def construir(datos: dict) -> Document:
 
         def ok(n):
             return por_n[n].get("llm", {}).get("correcta")
+
+        def cortada(*ns):
+            return any(ok(n) is False and truncada(por_n[n].get("llm")) for n in ns)
+
+        def no_evaluada(n):
+            return ok(n) is None
         obs.append("Paráfrasis sin entidad (18):: " + (
             "el LLM entendió la pregunta y respondió Prometeo, donde Prolog falló." if ok(18)
             else "tampoco la resolvió correctamente."))
         obs.append("Regla recursiva (6):: " + (
             "enumeró correctamente los 18 descendientes de Cronos." if ok(6)
+            else "la respuesta quedó cortada por el límite de tokens (ver nota), por lo que no se puede "
+                 "juzgar su razonamiento." if cortada(6)
             else "omitió o agregó personajes al enumerar los descendientes de Cronos; las listas largas derivadas "
                  "por varias reglas son su punto débil."))
         obs.append("Reglas compuestas (4 y 5):: " + (
             "aplicó bien las reglas de abuelo y tío." if ok(4) and ok(5)
+            else "las respuestas quedaron cortadas por el límite de tokens (ver nota)." if cortada(4, 5)
             else "cometió errores al encadenar reglas (abuelos o tíos), a pesar de tenerlas descritas."))
         obs.append("Conteo (15):: " + ("contó bien los 11 hijos de Zeus." if ok(15) else "contó mal los hijos de Zeus."))
         obs.append("Dato ausente (19):: " + (
             "declaró no tener la información, sin inventar al padre de Teseo." if ok(19)
+            else "no se pudo evaluar por un error de la API." if no_evaluada(19)
             else "respondió con conocimiento externo (alucinación respecto de la base): el padre de Teseo no está "
                  "en kb.pl."))
         obs.append("Fuera de dominio (20):: " + ("rechazó la pregunta correctamente." if ok(20) else "respondió fuera del dominio."))
         viñetas(doc, obs)
+        cortadas = [f["n"] for f in filas if f.get("llm", {}).get("correcta") is False and truncada(f["llm"])]
+        con_error = [f for f in filas if f.get("llm", {}).get("error")]
+        if cortadas or con_error:
+            nota = "Nota sobre esta ejecución: "
+            if cortadas:
+                nota += (f"las respuestas a las preguntas {', '.join(map(str, cortadas))} quedaron cortadas porque el "
+                         "límite de tokens de salida (400) también se consumía en el razonamiento interno del modelo; "
+                         "el límite se aumentó a 4000 en bot_llm.py. ")
+            if con_error:
+                cuota = any("429" in f["llm"]["error"] for f in con_error)
+                nota += (f"La pregunta {', '.join(str(f['n']) for f in con_error)} no se evaluó por "
+                         + ("agotarse la cuota gratuita de la API (error 429). " if cuota else "un error de la API. "))
+            nota += "Por lo tanto, la precisión del LLM en esta ejecución está subestimada."
+            p = doc.add_paragraph()
+            r = p.add_run(nota)
+            r.italic = True
     else:
         pendiente(doc, "Este apartado se completa automáticamente al ejecutar la evaluación con el LLM.")
 
@@ -371,14 +405,18 @@ def construir(datos: dict) -> Document:
     if hay_llm:
         rl = res["llm"]
         mejor = "Prolog" if rp["correctas"] > rl["correctas"] else ("el LLM" if rl["correctas"] > rp["correctas"] else "ninguno")
+        por_n2 = {f["n"]: f for f in filas}
         solo_p = [f["n"] for f in filas if f["prolog"]["correcta"] and f.get("llm", {}).get("correcta") is False]
         solo_l = [f["n"] for f in filas if f["prolog"]["correcta"] is False and f.get("llm", {}).get("correcta")]
         txt = (f"En el set, {'ambos obtuvieron el mismo puntaje' if mejor == 'ninguno' else f'{mejor} obtuvo más aciertos'} "
                f"({rp['correctas']} contra {rl['correctas']}). ")
         if solo_p:
-            txt += f"Solo Prolog acertó en las preguntas {', '.join(map(str, solo_p))}. "
+            txt += f"Solo Prolog acertó en {'las preguntas' if len(solo_p) > 1 else 'la pregunta'} {', '.join(map(str, solo_p))}"
+            if any(truncada(por_n2[n].get("llm")) for n in solo_p):
+                txt += " (en parte por respuestas del LLM cortadas, ver nota en 7.2)"
+            txt += ". "
         if solo_l:
-            txt += f"Solo el LLM acertó en las preguntas {', '.join(map(str, solo_l))}. "
+            txt += f"Solo el LLM acertó en {'las preguntas' if len(solo_l) > 1 else 'la pregunta'} {', '.join(map(str, solo_l))}. "
         if rp["tiempo_promedio"] > 0:
             txt += (f"Prolog fue unas {rl['tiempo_promedio'] / rp['tiempo_promedio']:.0f} veces más rápido "
                     f"({rp['tiempo_promedio']} s contra {rl['tiempo_promedio']} s). ")

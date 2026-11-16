@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import shutil
 import subprocess
 import urllib.error
@@ -97,7 +98,18 @@ def configuracion() -> tuple[str, str, str, str | None]:
     return proveedor, url, modelo, clave
 
 
-def _post(url: str, datos: dict, cabeceras: dict, timeout: int) -> dict:
+def _post(url: str, datos: dict, cabeceras: dict, timeout: int, reintentos: int = 2) -> dict:
+    """POST JSON. Ante cuota excedida (HTTP 429) espera y reintenta."""
+    for intento in range(reintentos + 1):
+        try:
+            return _post_una_vez(url, datos, cabeceras, timeout)
+        except RuntimeError as e:
+            if "HTTP 429" not in str(e) or intento == reintentos:
+                raise
+            time.sleep(20 * (intento + 1))
+
+
+def _post_una_vez(url: str, datos: dict, cabeceras: dict, timeout: int) -> dict:
     req = urllib.request.Request(
         url, data=json.dumps(datos).encode("utf-8"),
         headers={"Content-Type": "application/json", **cabeceras}, method="POST",
@@ -120,13 +132,13 @@ def preguntar(pregunta: str, timeout: int = 60) -> str:
     sistema = INSTRUCCIONES + base_de_conocimiento()
 
     if proveedor == "anthropic":
-        datos = {"model": modelo, "max_tokens": 400, "temperature": 0, "system": sistema,
+        datos = {"model": modelo, "max_tokens": 4000, "temperature": 0, "system": sistema,
                  "messages": [{"role": "user", "content": pregunta}]}
         cab = {"x-api-key": clave, "anthropic-version": "2023-06-01"}
         r = _post(f"{url}/messages", datos, cab, timeout)
         texto = "".join(b.get("text", "") for b in r.get("content", []))
     else:  # API compatible con OpenAI (OpenAI, Gemini, Groq, Ollama)
-        datos = {"model": modelo, "temperature": 0, "max_tokens": 400,
+        datos = {"model": modelo, "temperature": 0, "max_tokens": 4000,
                  "messages": [{"role": "system", "content": sistema},
                               {"role": "user", "content": pregunta}]}
         cab = {"Authorization": f"Bearer {clave}"} if clave else {}
