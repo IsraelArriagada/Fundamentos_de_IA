@@ -1,12 +1,18 @@
 {
-  "fecha": "2026-11-15 22:21",
-  "modelo_llm": null,
+  "fecha": "2026-11-15 23:27",
+  "modelo_llm": "gemini / gemini-3.8-flash",
   "resumen": {
     "prolog": {
       "correctas": 19,
       "evaluadas": 20,
       "errores": 0,
-      "tiempo_promedio": 0.05
+      "tiempo_promedio": 0.22
+    },
+    "llm": {
+      "correctas": 15,
+      "evaluadas": 19,
+      "errores": 1,
+      "tiempo_promedio": 12.81
     }
   },
   "filas": [
@@ -17,7 +23,13 @@
       "prolog": {
         "respuesta": "El padre de Apolo es Zeus.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.19,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "El padre de Apolo es Zeus.",
+        "error": null,
+        "segundos": 34.58,
         "correcta": true
       }
     },
@@ -28,7 +40,13 @@
       "prolog": {
         "respuesta": "La madre de Atenea es Metis.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.18,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "La madre de Atenea es Metis.",
+        "error": null,
+        "segundos": 30.73,
         "correcta": true
       }
     },
@@ -39,8 +57,14 @@
       "prolog": {
         "respuesta": "Los hermanos de Zeus (comparten al menos un progenitor) son: Deméter, Hades, Hera, Hestia y Poseidón.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.19,
         "correcta": true
+      },
+      "llm": {
+        "respuesta": "Los hermanos de Zeus son Deméter, Hades, Hera, Hestia y",
+        "error": null,
+        "segundos": 12.43,
+        "correcta": false
       }
     },
     {
@@ -50,8 +74,14 @@
       "prolog": {
         "respuesta": "Los abuelos de Apolo son: Ceo, Cronos, Febe y Rea.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.2,
         "correcta": true
+      },
+      "llm": {
+        "respuesta": "Los abuelos de Apolo son Ceo, Cronos, Fe",
+        "error": null,
+        "segundos": 36.23,
+        "correcta": false
       }
     },
     {
@@ -61,8 +91,14 @@
       "prolog": {
         "respuesta": "Los tíos de Apolo son: Deméter, Hades, Hera, Hestia y Poseidón.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.22,
         "correcta": true
+      },
+      "llm": {
+        "respuesta": "Los tíos de Apolo son Hades y Poseidón por",
+        "error": null,
+        "segundos": 26.26,
+        "correcta": false
       }
     },
     {
@@ -72,8 +108,14 @@
       "prolog": {
         "respuesta": "Los descendientes de Cronos son: Apolo, Ares, Artemisa, Atenea, Deméter, Dionisio, Hades, Hebe, Hefesto, Hera, Heracles, Hermes, Hestia, Perséfone, Perseo, Poseidón, Tritón y Zeus.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.25,
         "correcta": true
+      },
+      "llm": {
+        "respuesta": "Los descendientes de Cronos son sus hijos Deméter, Hades",
+        "error": null,
+        "segundos": 15.57,
+        "correcta": false
       }
     },
     {
@@ -83,7 +125,13 @@
       "prolog": {
         "respuesta": "La divinidad asociada a «mar» es: Poseidón.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.23,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "El dios del mar es Poseidón.",
+        "error": null,
+        "segundos": 4.92,
         "correcta": true
       }
     },
@@ -94,7 +142,13 @@
       "prolog": {
         "respuesta": "Apolo es divinidad de: medicina, música, profecía y sol.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.2,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Apolo es el dios de la medicina, la música, la profecía y el sol.",
+        "error": null,
+        "segundos": 3.5,
         "correcta": true
       }
     },
@@ -105,7 +159,13 @@
       "prolog": {
         "respuesta": "Los símbolos de Atenea son: escudo égida, lechuza y olivo.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.22,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Los símbolos de Atenea son el escudo égida, la lechuza y el olivo.",
+        "error": null,
+        "segundos": 5.13,
         "correcta": true
       }
     },
@@ -116,7 +176,13 @@
       "prolog": {
         "respuesta": "Zeus es divinidad olímpica. Dominios: cielo, rayo y trueno. Símbolos: rayo, roble y águila. Hijo de Cronos y Rea. Equivalente romano: Júpiter.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.21,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Júpiter es el nombre romano de Zeus, un",
+        "error": null,
+        "segundos": 4.46,
         "correcta": true
       }
     },
@@ -127,7 +193,13 @@
       "prolog": {
         "respuesta": "Hades vive en el inframundo.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.21,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Hades vive en el inframundo.",
+        "error": null,
+        "segundos": 4.09,
         "correcta": true
       }
     },
@@ -138,7 +210,13 @@
       "prolog": {
         "respuesta": "Sí, Zeus es hijo de Cronos.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.22,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Sí, Zeus es hijo de Cronos.",
+        "error": null,
+        "segundos": 2.87,
         "correcta": true
       }
     },
@@ -149,7 +227,13 @@
       "prolog": {
         "respuesta": "No, según mi conocimiento Apolo no es hijo de Poseidón.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.25,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "No, Apolo es hijo de Zeus y Leto",
+        "error": null,
+        "segundos": 4.8,
         "correcta": true
       }
     },
@@ -160,7 +244,13 @@
       "prolog": {
         "respuesta": "Medusa fue derrotada por Perseo.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.21,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Medusa fue derrotada y decapitada por Perseo con la ayuda de un escudo pulido.",
+        "error": null,
+        "segundos": 3.42,
         "correcta": true
       }
     },
@@ -171,7 +261,13 @@
       "prolog": {
         "respuesta": "Zeus tiene 11 hijos registrados: Apolo, Ares, Artemisa, Atenea, Dionisio, Hebe, Hefesto, Heracles, Hermes, Perséfone y Perseo.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.21,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Según la base de conocimiento, Zeus tiene 11",
+        "error": null,
+        "segundos": 21.21,
         "correcta": true
       }
     },
@@ -182,7 +278,13 @@
       "prolog": {
         "respuesta": "Los hijos de Zeus y Hera son: Ares, Hebe y Hefesto.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.22,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Los hijos de Zeus y Hera son Ares, Hebe y Hefesto.",
+        "error": null,
+        "segundos": 19.0,
         "correcta": true
       }
     },
@@ -193,7 +295,13 @@
       "prolog": {
         "respuesta": "La pareja de Hefesto es Afrodita.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.25,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Hefesto tiene como pareja a Afrodita.",
+        "error": null,
+        "segundos": 4.29,
         "correcta": true
       }
     },
@@ -204,8 +312,14 @@
       "prolog": {
         "respuesta": "La divinidad asociada a «fuego» es: Hefesto.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.26,
         "correcta": false
+      },
+      "llm": {
+        "respuesta": "Prometeo robó el fuego de los dioses para entregárselo a los humanos.",
+        "error": null,
+        "segundos": 14.58,
+        "correcta": true
       }
     },
     {
@@ -215,8 +329,14 @@
       "prolog": {
         "respuesta": "No tengo registrado el padre de Teseo.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.22,
         "correcta": true
+      },
+      "llm": {
+        "respuesta": "",
+        "error": "El proveedor respondió HTTP 429: [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceed",
+        "segundos": 1.22,
+        "correcta": null
       }
     },
     {
@@ -226,7 +346,13 @@
       "prolog": {
         "respuesta": "No pude responder esa pregunta con mi conocimiento. Escribe \"ayuda\" para ver ejemplos.",
         "error": null,
-        "segundos": 0.05,
+        "segundos": 0.21,
+        "correcta": true
+      },
+      "llm": {
+        "respuesta": "Solo puedo responder preguntas sobre mitología griega.",
+        "error": null,
+        "segundos": 6.85,
         "correcta": true
       }
     }
